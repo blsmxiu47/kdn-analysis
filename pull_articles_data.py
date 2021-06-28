@@ -12,7 +12,7 @@ pg_db = os.environ.get('PG_DATABASE')
 csv_path = os.environ.get('RESULT_PATH')
 
 
-def connect_to_relation(table_name) -> Table:
+def connect_to_relation(table_name):
     """
     Attempts to create a connection to database and returns sqlalchemy Table object
 
@@ -22,7 +22,7 @@ def connect_to_relation(table_name) -> Table:
         Name of existing database relation for which to return Table object
     Returns
     -------
-    sqlalchemy Table object corresponding to identified postgres relation
+    sqlalchemy engine.base.Connection and Table object corresponding to identified postgres relation
     """
     engine = create_engine(f'postgresql://{pg_username}:{pg_password}@localhost:5432/{pg_db}')
     connection = engine.connect()
@@ -33,11 +33,12 @@ def connect_to_relation(table_name) -> Table:
 
 def execute_query(connection, table):
     """
-    Takes a Table and executes a select statement, saving results to a csv
+    Takes sqlalchemy Connection and Table objects and executes a select statement, saving results to a csv
 
     Parameters
     ----------
-    table: Table
+    connection: sqlalchemy.engine.base.Connection
+    table: sqlalchemy.sql.schema.Table
         sqlalchemy Table object to query
     Returns
     -------
