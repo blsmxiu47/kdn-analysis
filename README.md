@@ -1,5 +1,9 @@
 # KDNuggets Articles Text Cleaning and Analysis
 
-Also LDA topic modeling and supervised tag prediction, once I get a chance to add annotations.
+## Components
+- Script to pull rows from Postgres DB
+- Notebook demo of text cleaning
+- TK: Analysis, topic modeling, and tagging
 
-Text wrangling with NLTK, TextBlob, StanfordCoreNLP, Gensim
+## Presentation Notes
+Modules and notebooks WIP. Cleaner but still AOY incomplete versions may be found [here](http://data-fluent.com/). Though this portfolio website is also very WIP

@@ -1,28 +1,60 @@
-# pull_kdn_data.py
-# Using sqlalchemy extract (all) data in from postgresql data table
-#  'kdn_articles' and export to a format that we can use for cleaning
-#  demos in python/pandas
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, MetaData, Table, select
 import pandas as pd
 
+# Postgres DB-specific credentials and output path to be defined in local dotenv file
+load_dotenv()
 
-engine = create_engine('postgresql://weswa:PASSWORD@localhost:5432/weswa')
-connection = engine.connect()
-meta = MetaData()
-meta.reflect(bind=engine)
+pg_username = os.environ.get('PG_USERNAME')
+pg_password = os.environ.get('PG_PASSWORD')
+pg_db = os.environ.get('PG_DATABASE')
+csv_path = os.environ.get('RESULT_PATH')
 
-kdn_articles = Table('kdn_articles', meta, autoload=True, autoload_with=engine)
 
-stmt = select([kdn_articles])
-results = connection.execute(stmt).fetchall()
-kdn_articles_df = pd.DataFrame(
-    results, 
-    columns=['id', 'title', 'date_published', 'author', 'author_info', 
-        'tags', 'excerpt', 'post_text', 'url']
-)
+def connect_to_relation(table_name) -> Table:
+    """
+    Attempts to create a connection to database and returns sqlalchemy Table object
 
-#kdn_articles_df.head(10)
+    Parameters
+    ----------
+    table_name: str
+        Name of existing database relation for which to return Table object
+    Returns
+    -------
+    sqlalchemy Table object corresponding to identified postgres relation
+    """
+    engine = create_engine(f'postgresql://{pg_username}:{pg_password}@localhost:5432/{pg_db}')
+    connection = engine.connect()
+    meta = MetaData()
+    meta.reflect(bind=engine)
+    return (connection, Table(table_name, meta, autoload=True, autoload_with=engine))
 
-kdn_articles_df.to_csv('C:\\Users\\weswa\\psql_pulls\\kdn_test_pull.csv', 
-    sep=',', header=kdn_articles.columns,
-    index=False, encoding='utf-8')
+
+def execute_query(connection, table):
+    """
+    Takes a Table and executes a select statement, saving results to a csv
+
+    Parameters
+    ----------
+    table: Table
+        sqlalchemy Table object to query
+    Returns
+    -------
+    None
+    """
+    stmt = select([table])
+    results = connection.execute(stmt).fetchall()
+    
+    kdn_articles_df = pd.DataFrame(
+        results, 
+        columns=['id', 'title', 'date_published', 'author', 'author_info', 
+            'tags', 'excerpt', 'post_text', 'url'])
+    kdn_articles_df.to_csv(csv_path, 
+        sep=',', header=table.columns,
+        index=False, encoding='utf-8')
+
+
+if __name__ == '__main__':
+    conn, kdn_articles_table = connect_to_relation(table_name='kdn_articles')
+    execute_query(conn, kdn_articles_table)
